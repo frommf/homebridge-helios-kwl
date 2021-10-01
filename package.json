@@ -1,0 +1,29 @@
+{
+  "name": "helios",
+  "private": false,
+  "version": "0.2.2",
+  "description": "Helios Easy Controls modbus tcp.",
+  "main": "index.js",
+  "bin": {
+    "helios": "./index.js"
+  },
+  "preferGlobal": true,
+  "scripts": {
+    "start": "node ./index.js"
+  },
+  "keywords": [
+    "homebridge",
+    "helios",
+    "easycontrols",
+    "modbus"
+  ],
+  "author": {
+    "name": "Tobias Frommfeld",
+    "email": "helios@frommf.de"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "jsmodbus": "^4.0.0",
+    "yargs": "^16.2.0"
+  }
+}
