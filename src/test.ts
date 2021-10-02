@@ -4,11 +4,11 @@ import Helios from './helios';
   const helios = new Helios('helios.fritz.box', 502);
   await helios.open();
   try {
-    const result = await helios.get('v00094', 6);
+    const result = await helios.get('v00104', 8);
     console.log(`Result: ${result}`);
   } catch (e) {
-    // Deal with the fact the chain failed
+    console.error(e);
   } finally {
-    helios.close();
+    await helios.close();
   }
 })();

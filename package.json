@@ -1,19 +1,23 @@
 {
-  "name": "helios",
+  "name": "homebridge-helios-kwl",
   "private": false,
-  "version": "0.2.2",
+  "version": "0.0.1",
   "type": "commonjs",
-  "description": "Helios Easy Controls modbus tcp.",
-  "main": "./dist/index.js",
-  "bin": {
-    "helios": "./dist/index.js"
-  },
+  "description": "Homebridge plugin for Helios Easy Controls using modbus/tcp.",
+  "main": "dist/accessory.js",
   "preferGlobal": true,
   "scripts": {
-    "start": "node ./dist/index.js"
+    "test": "node ./dist/test.js",
+    "clean": "rimraf ./dist",
+    "build": "rimraf ./dist && tsc",
+    "prepublishOnly": "npm run build",
+    "postpublish": "npm run clean"
+  },
+  "engines": {
+    "homebridge": ">=1.0.0"
   },
   "keywords": [
-    "homebridge",
+    "homebridge-plugin",
     "helios",
     "easycontrols",
     "modbus"
@@ -22,11 +26,14 @@
     "name": "Tobias Frommfeld",
     "email": "helios@frommf.de"
   },
-  "license": "MIT",
+  "license": "ISC",
+  "files": [
+    "LICENSE",
+    "dist"
+  ],
   "dependencies": {
     "@types/serialport": "^8.0.2",
-    "jsmodbus": "^4.0.0",
-    "yargs": "^16.2.0"
+    "jsmodbus": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^16.10.2",
@@ -35,6 +42,8 @@
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.24.2",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.3",
+    "rimraf": "^3.0.2",
+    "homebridge": "^1.0.4"
   }
 }
