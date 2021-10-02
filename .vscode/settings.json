@@ -1,6 +1,8 @@
 {
     "cSpell.words": [
-        "modbus"
+        "jsmodbus",
+        "modbus",
+        "modbuslen"
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll": true

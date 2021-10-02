@@ -2,14 +2,15 @@
   "name": "helios",
   "private": false,
   "version": "0.2.2",
+  "type": "commonjs",
   "description": "Helios Easy Controls modbus tcp.",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "bin": {
-    "helios": "./index.js"
+    "helios": "./dist/index.js"
   },
   "preferGlobal": true,
   "scripts": {
-    "start": "node ./index.js"
+    "start": "node ./dist/index.js"
   },
   "keywords": [
     "homebridge",
@@ -23,14 +24,17 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@types/serialport": "^8.0.2",
     "jsmodbus": "^4.0.0",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
+    "@types/node": "^16.10.2",
     "@typescript-eslint/eslint-plugin": "^4.32.0",
     "@typescript-eslint/parser": "^4.32.0",
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.24.2"
+    "eslint-plugin-import": "^2.24.2",
+    "typescript": "^4.4.3"
   }
 }
