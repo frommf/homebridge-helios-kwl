@@ -11,6 +11,12 @@ import {
   Logging,
   Service,
 } from 'homebridge';
+import HeliosKWL from './heliosKWL';
+
+interface HeliosKWLConfig extends AccessoryConfig{
+  host?: string,
+  port?: number
+}
 
 /*
  * IMPORTANT NOTICE
@@ -20,7 +26,7 @@ import {
  * "hap-nodejs" module).
  */
 let hap: HAP;
-class HeliosKWL implements AccessoryPlugin {
+class HeliosKWLAccessory implements AccessoryPlugin {
   private readonly log: Logging;
 
   private readonly name: string;
@@ -31,36 +37,58 @@ class HeliosKWL implements AccessoryPlugin {
 
   private readonly informationService: Service;
 
-  constructor(log: Logging, config: AccessoryConfig, api: API) {
+  private readonly heliosKwl: HeliosKWL;
+
+  constructor(log: Logging, config: HeliosKWLConfig, api: API) {
     this.log = log;
     this.name = config.name;
 
-    this.switchService = new hap.Service.Switch(this.name);
+    if (!(config.host && config.port)) throw new Error('No host and port configured.');
+
+    this.heliosKwl = new HeliosKWL(
+      config.host,
+      config.port,
+      (m) => log.info(m),
+    );
+
+    this.switchService = new hap.Service.Switch(`${this.name} - Party Mode`);
+
     this.switchService
       .getCharacteristic(hap.Characteristic.On)
       .on(
         CharacteristicEventTypes.GET,
-        (callback: CharacteristicGetCallback) => {
-          log.info(
-            `Current state of the switch was returned: ${
-              this.switchOn ? 'ON' : 'OFF'
-            }`,
-          );
-          callback(undefined, this.switchOn);
+        async (callback: CharacteristicGetCallback) => {
+          log('Calling getPartyOn().');
+          await this.heliosKwl.run(async (com) => {
+            const isOn = await com.getPartyOn();
+            log(`Return getPartyOn() => ${isOn}`);
+            callback(undefined, isOn);
+          });
         },
       )
       .on(
         CharacteristicEventTypes.SET,
-        (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-          this.switchOn = value as boolean;
-          log.info(`Switch state was set to: ${this.switchOn ? 'ON' : 'OFF'}`);
-          callback();
+        async (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
+          await this.heliosKwl.run(async (com) => {
+            await com.setPartyOn(value as boolean);
+            log(`SetPartyOn(${value as boolean})`);
+            callback();
+          });
         },
       );
 
-    this.informationService = new hap.Service.AccessoryInformation()
-      .setCharacteristic(hap.Characteristic.Manufacturer, 'Helios')
-      .setCharacteristic(hap.Characteristic.Model, 'Custom Model');
+    this.informationService = new hap.Service.AccessoryInformation();
+    this.informationService.setCharacteristic(hap.Characteristic.Manufacturer, 'Helios AG 2');
+    this.informationService.getCharacteristic(hap.Characteristic.Model).onGet(
+      async () => {
+        log('Calling getModel().');
+        return this.heliosKwl.run(async (com) => {
+          const model = await com.getModel();
+          log(`Return getModel() => ${model}`);
+          return model;
+        });
+      },
+    );
 
     log.info('Switch finished initializing!');
   }
@@ -86,5 +114,5 @@ class HeliosKWL implements AccessoryPlugin {
  */
 export = (api: API) => {
   hap = api.hap;
-  api.registerAccessory('Helios KWL', HeliosKWL);
+  api.registerAccessory('Helios KWL', HeliosKWLAccessory);
 };

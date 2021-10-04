@@ -1,0 +1,56 @@
+/* eslint-disable max-classes-per-file */
+/* eslint-disable no-unused-vars */
+import { Mutex } from 'async-mutex';
+import HeliosModbus, { Log } from './heliosModbus';
+
+class Commands {
+  private bus: HeliosModbus;
+
+  constructor(bus: HeliosModbus) {
+    this.bus = bus;
+  }
+
+  async getModel() : Promise<string> {
+    const modelText = await this.bus.get('v00000', 20);
+    return modelText;
+  }
+
+  async getPartyOn() : Promise<boolean> {
+    const isOnText = await this.bus.get('v00094', 5);
+    return Boolean(Number(isOnText));
+  }
+
+  async setPartyOn(isOn: boolean) : Promise<void> {
+    const numberValue = Number(isOn).toString();
+    await this.bus.set('v00094', 5, numberValue);
+  }
+}
+
+export default class HeliosKWL {
+  private host: string;
+
+  private port: number;
+
+  private log?: Log;
+
+  private mutex: Mutex;
+
+  constructor(host: string, port: number, log?: Log) {
+    this.host = host;
+    this.port = port;
+    this.log = log;
+    this.mutex = new Mutex();
+  }
+
+  async run<T>(commFunc: (com: Commands) => Promise<T>): Promise<T> {
+    return this.mutex.runExclusive(async () => {
+      const bus = new HeliosModbus(this.host, this.port, this.log);
+      await bus.open();
+      try {
+        return await commFunc(new Commands(bus));
+      } finally {
+        await bus.close();
+      }
+    });
+  }
+}

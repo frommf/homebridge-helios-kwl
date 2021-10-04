@@ -1,13 +1,13 @@
 {
   "name": "homebridge-helios-kwl",
   "private": false,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "commonjs",
   "description": "Homebridge plugin for Helios Easy Controls using modbus/tcp.",
   "main": "dist/accessory.js",
   "preferGlobal": true,
   "scripts": {
-    "test": "node ./dist/test.js",
+    "test": "npm run build && node ./dist/test.js",
     "clean": "rimraf ./dist",
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run build",
@@ -33,6 +33,7 @@
   ],
   "dependencies": {
     "@types/serialport": "^8.0.2",
+    "async-mutex": "^0.3.2",
     "jsmodbus": "^4.0.0"
   },
   "devDependencies": {
@@ -42,8 +43,8 @@
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.24.2",
-    "typescript": "^4.4.3",
+    "homebridge": "^1.0.4",
     "rimraf": "^3.0.2",
-    "homebridge": "^1.0.4"
+    "typescript": "^4.4.3"
   }
 }
