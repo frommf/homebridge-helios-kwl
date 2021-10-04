@@ -48,7 +48,7 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     this.heliosKwl = new HeliosKWL(
       config.host,
       config.port,
-      (m) => log.info(m),
+      (m) => log.debug(m),
     );
 
     this.switchService = new hap.Service.Switch(`${this.name} - Party Mode`);

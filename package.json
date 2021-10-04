@@ -28,6 +28,8 @@
   },
   "license": "ISC",
   "files": [
+    "README.md",
+    "config.schema.json",
     "LICENSE",
     "dist"
   ],

@@ -1,0 +1,29 @@
+{
+  "pluginAlias": "Helios KWL",
+  "pluginType": "accessory",
+  "singular": true,
+  "headerDisplay": "#Plugin for Helios EasyControls",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "Helios KWL",
+        "required": true
+      },
+      "port": {
+        "title": "Port",
+        "type": "number",
+        "default": "502",
+        "required": true
+      },
+      "host": {
+        "title": "Host",
+        "type": "string",
+        "default": "helios.fritz.box",
+        "required": true
+      }
+    }
+  }
+}
