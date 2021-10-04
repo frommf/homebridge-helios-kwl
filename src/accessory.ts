@@ -53,46 +53,74 @@ class HeliosKWLAccessory implements AccessoryPlugin {
 
     this.switchService = new hap.Service.Switch(`${this.name} - Party Mode`);
 
-    this.switchService
-      .getCharacteristic(hap.Characteristic.On)
-      .on(
-        CharacteristicEventTypes.GET,
-        async (callback: CharacteristicGetCallback) => {
-          log('Calling getPartyOn().');
-          await this.heliosKwl.run(async (com) => {
-            const isOn = await com.getPartyOn();
-            log(`Return getPartyOn() => ${isOn}`);
-            callback(undefined, isOn);
-          }).catch((err) => callback(err));
-        },
-      )
-      .on(
-        CharacteristicEventTypes.SET,
-        async (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-          await this.heliosKwl.run(async (com) => {
-            await com.setPartyOn(value as boolean);
-            log(`SetPartyOn(${value as boolean})`);
-            callback();
-          }).catch((err) => callback(err));
-        },
-      );
+    this.switchService.getCharacteristic(hap.Characteristic.On)
+      .onGet(this.handlePartyGet.bind(this))
+      .onSet(this.handlePartySet.bind(this));
 
     this.informationService = new hap.Service.AccessoryInformation();
-    this.informationService.setCharacteristic(hap.Characteristic.Manufacturer, 'Helios AG 2');
+    this.informationService.setCharacteristic(hap.Characteristic.Manufacturer, 'Helios');
     this.informationService.getCharacteristic(hap.Characteristic.Model)
-      .on(
-        CharacteristicEventTypes.GET,
-        async (callback: CharacteristicGetCallback) => {
-          log('Calling getModel().');
-          await this.heliosKwl.run(async (com) => {
-            const model = await com.getModel();
-            log(`Return getModel() => ${model}`);
-            callback(undefined, model);
-          }).catch((err) => callback(err));
-        },
-      );
+      .onGet(this.handleModelGet.bind(this));
+    this.informationService.getCharacteristic(hap.Characteristic.SerialNumber)
+      .onGet(this.handleSerialNumberGet.bind(this));
+    this.informationService.getCharacteristic(hap.Characteristic.FirmwareRevision)
+      .onGet(this.handleFirmwareRevisionGet.bind(this));
+    this.informationService.getCharacteristic(hap.Characteristic.Identify)
+      .onSet(this.handleIdentifySet.bind(this));
+
     setInterval(() => this.periodicFetch(), 1000 * 5);
     log.info('Switch finished initializing!');
+  }
+
+  handleIdentifySet(value: any) {
+    this.log.error(`Triggered SET Identify: ${value}`);
+  }
+
+  private async handleSerialNumberGet() {
+    this.log.info('Triggered GET SerialNumber');
+    return this.heliosKwl
+      .run(async (com) => com.getSerial())
+      .catch((err) => {
+        this.log.error(err);
+        return '';
+      });
+  }
+
+  private async handleModelGet() {
+    this.log.info('Triggered GET Model');
+    return this.heliosKwl
+      .run(async (com) => com.getModel())
+      .catch((err) => {
+        this.log.error(err);
+        return '';
+      });
+  }
+
+  private async handlePartyGet() {
+    this.log.info('Triggered GET Party');
+    return this.heliosKwl
+      .run(async (com) => com.getPartyOn())
+      .catch((err) => {
+        this.log.error(err);
+        return false;
+      });
+  }
+
+  private async handlePartySet(isParty : any) {
+    this.log.info('Triggered SET Party');
+    return this.heliosKwl
+      .run(async (com) => com.setPartyOn(isParty as boolean))
+      .catch((err) => this.log.error(err));
+  }
+
+  private async handleFirmwareRevisionGet() {
+    this.log.info('Triggered GET FirmwareRevision');
+    return this.heliosKwl
+      .run(async (com) => com.getFirmwareRevision())
+      .catch((err) => {
+        this.log.error(err);
+        return '';
+      });
   }
 
   private isFetching = false;

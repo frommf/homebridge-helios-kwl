@@ -20,6 +20,14 @@ class Commands {
     return Boolean(Number(isOnText));
   }
 
+  async getSerial() : Promise<string> {
+    return this.bus.get('v00303', 12);
+  }
+
+  async getFirmwareRevision() : Promise<string> {
+    return this.bus.get('v01101', 7);
+  }
+
   async setPartyOn(isOn: boolean) : Promise<void> {
     const numberValue = Number(isOn).toString();
     await this.bus.set('v00094', 5, numberValue);
