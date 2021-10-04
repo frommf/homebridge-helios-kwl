@@ -73,7 +73,7 @@ export default class HeliosModbus {
       buf.write(`${variable}=`, 0, 7, 'ascii');
       buf.write(value, 7, value.length, 'ascii');
       this.client.writeMultipleRegisters(1, buf).then((resp) => {
-        this.log(`Response: ${JSON.stringify(resp.response)}`);
+        this.log(`Written: ${JSON.stringify(resp.request)}`);
         resolve();
       }, (error) => {
         reject(new Error(
@@ -90,13 +90,14 @@ export default class HeliosModbus {
       this.client
         .writeMultipleRegisters(1, Buffer.from(`${variable}\0\0`, 'ascii'))
         .then((writeResp) => {
-          this.log(`Response: ${JSON.stringify(writeResp.response)}`);
+          this.log(`Written: ${JSON.stringify(writeResp.request)}`);
           this.client.readHoldingRegisters(1, modbuslen).then((resp) => {
             const resultText = resp.response.body.valuesAsBuffer
               .toString('ascii')
               .replace(/\0+$/g, '');
             const keyValue = resultText.split(/=(.+)/, 2);
             if (keyValue.length === 2 && keyValue[0] === variable) {
+              this.log(`Response: ${resultText}`);
               resolve(decodeURIComponent(keyValue[1]));
             } else {
               reject(

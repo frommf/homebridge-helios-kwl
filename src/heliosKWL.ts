@@ -24,6 +24,16 @@ class Commands {
     return this.bus.get('v00303', 12);
   }
 
+  async getVentilationPercent() : Promise<number> {
+    const percentText = await this.bus.get('v00103', 6);
+    return Number(percentText);
+  }
+
+  async getFanStage() : Promise<number> {
+    const stage = await this.bus.get('v00102', 5);
+    return Number(stage);
+  }
+
   async getFirmwareRevision() : Promise<string> {
     return this.bus.get('v01101', 7);
   }
@@ -31,6 +41,16 @@ class Commands {
   async setPartyOn(isOn: boolean) : Promise<void> {
     const numberValue = Number(isOn).toString();
     await this.bus.set('v00094', 5, numberValue);
+  }
+
+  async getSilentOn() : Promise<boolean> {
+    const isOnText = await this.bus.get('v00099', 5);
+    return Boolean(Number(isOnText));
+  }
+
+  async setSilentOn(isOn: boolean) : Promise<void> {
+    const numberValue = Number(isOn).toString();
+    await this.bus.set('v00099', 5, numberValue);
   }
 }
 
