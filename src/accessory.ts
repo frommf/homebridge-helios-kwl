@@ -31,7 +31,9 @@ class HeliosKWLAccessory implements AccessoryPlugin {
 
   private readonly name: string;
 
-  private switchOn = false;
+  private lastFanOnValue = true;
+
+  private isFetching = false;
 
   private readonly partySwitch: Service;
 
@@ -56,19 +58,15 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     );
 
     this.fan = new hap.Service.Fan(`${this.name} - Fan`, 'fan speed');
-    this.fan.getCharacteristic(hap.Characteristic.RotationSpeed)
-      .onGet(this.handleSpeedGet.bind(this));
     this.fan.getCharacteristic(hap.Characteristic.On)
-      .onGet(this.handleFanOn.bind(this));
+      .onSet(this.handleFanSet.bind(this));
 
     this.silentSwitch = new hap.Service.Switch(`${this.name} - Silent Mode`, 'silent mode');
     this.silentSwitch.getCharacteristic(hap.Characteristic.On)
-      .onGet(this.handleSilentGet.bind(this))
       .onSet(this.handleSilentSet.bind(this));
 
     this.partySwitch = new hap.Service.Switch(`${this.name} - Party Mode`, 'party mode');
     this.partySwitch.getCharacteristic(hap.Characteristic.On)
-      .onGet(this.handlePartyGet.bind(this))
       .onSet(this.handlePartySet.bind(this));
 
     this.informationService = new hap.Service.AccessoryInformation();
@@ -82,7 +80,8 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     this.informationService.getCharacteristic(hap.Characteristic.Identify)
       .onSet(this.handleIdentifySet.bind(this));
 
-    setInterval(() => this.periodicFetch(), 1000 * 7);
+    setTimeout(() => setInterval(() => this.periodicFetch(), 1000 * 7), 1000 * 3);
+
     log.info('Switch finished initializing!');
   }
 
@@ -100,29 +99,6 @@ class HeliosKWLAccessory implements AccessoryPlugin {
       });
   }
 
-  private async handleSpeedGet() {
-    this.log.info('Triggered GET Speed');
-    return this.heliosKwl
-      .run(async (com) => com.getVentilationPercent())
-      .catch((err) => {
-        this.log.error(err);
-        return 0;
-      });
-  }
-
-  private async handleFanOn() {
-    this.log.info('Triggered GET FanIsOn');
-    return this.heliosKwl
-      .run(async (com) => {
-        const stage = await com.getFanStage();
-        return stage !== 0;
-      })
-      .catch((err) => {
-        this.log.error(err);
-        return false;
-      });
-  }
-
   private async handleModelGet() {
     this.log.info('Triggered GET Model');
     return this.heliosKwl
@@ -133,16 +109,6 @@ class HeliosKWLAccessory implements AccessoryPlugin {
       });
   }
 
-  private async handlePartyGet() {
-    this.log.info('Triggered GET Party');
-    return this.heliosKwl
-      .run(async (com) => com.getPartyOn())
-      .catch((err) => {
-        this.log.error(err);
-        return false;
-      });
-  }
-
   private async handlePartySet(isParty : any) {
     this.log.info('Triggered SET Party');
     return this.heliosKwl
@@ -150,21 +116,21 @@ class HeliosKWLAccessory implements AccessoryPlugin {
       .catch((err) => this.log.error(err));
   }
 
-  private async handleSilentGet() {
-    this.log.info('Triggered GET Silent');
-    return this.heliosKwl
-      .run(async (com) => com.getSilentOn())
-      .catch((err) => {
-        this.log.error(err);
-        return false;
-      });
-  }
-
   private async handleSilentSet(isSilent : any) {
     this.log.info('Triggered SET Silent');
     return this.heliosKwl
       .run(async (com) => com.setSilentOn(isSilent as boolean))
       .catch((err) => this.log.error(err));
+  }
+
+  private handleFanSet(isOn : any) {
+    this.log.info('Triggered SET fan ignored');
+    setTimeout(() => {
+      this.fan
+        .getCharacteristic(hap.Characteristic.On)
+        .updateValue(this.lastFanOnValue);
+    }, 500);
+    return true;
   }
 
   private async handleFirmwareRevisionGet() {
@@ -176,8 +142,6 @@ class HeliosKWLAccessory implements AccessoryPlugin {
         return '';
       });
   }
-
-  private isFetching = false;
 
   private async periodicFetch() {
     try {
@@ -202,9 +166,10 @@ class HeliosKWLAccessory implements AccessoryPlugin {
           .updateValue(fanPercentage);
 
         const fanStage = await com.getFanStage();
+        this.lastFanOnValue = fanStage !== 0;
         this.fan
           .getCharacteristic(hap.Characteristic.On)
-          .updateValue(fanStage !== 0);
+          .updateValue(this.lastFanOnValue);
       });
     } catch (error) {
       this.log.error(`Error fetching values: ${error}`);
