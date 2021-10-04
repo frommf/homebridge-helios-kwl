@@ -6,6 +6,10 @@ The plugin provides the following services:
 
 - **Party Modus Switch**: A switch synchronized to the 'Party Modus' of the ventilation
 
+## Remarks
+
+This plugin is in early alpha state. Use it with care. This is a plugin for connecting Helios Domestic Ventilation Systems to Homebridge. There is no connection with the manufacturer and since I only own one of the Systems I can't provide support or help with yours...
+
 ## Config
 
     "accessories": [

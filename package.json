@@ -1,7 +1,7 @@
 {
   "name": "homebridge-helios-kwl",
   "private": false,
-  "version": "0.0.2",
+  "version": "0.1.0",
   "type": "commonjs",
   "description": "Homebridge plugin for Helios Easy Controls using modbus/tcp.",
   "main": "dist/accessory.js",
@@ -27,8 +27,17 @@
     "email": "helios@frommf.de"
   },
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xxx/homebridge-helios-kwl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xxx/homebridge-helios-kwl/issues"
+  },
+  "homepage": "https://github.com/xxx/homebridge-helios-kwl#readme",
   "files": [
     "README.md",
+    "CHANGELOG.md",
     "config.schema.json",
     "LICENSE",
     "dist"
