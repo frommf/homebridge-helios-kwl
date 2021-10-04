@@ -63,7 +63,7 @@ class HeliosKWLAccessory implements AccessoryPlugin {
             const isOn = await com.getPartyOn();
             log(`Return getPartyOn() => ${isOn}`);
             callback(undefined, isOn);
-          });
+          }).catch((err) => callback(err));
         },
       )
       .on(
@@ -73,24 +73,48 @@ class HeliosKWLAccessory implements AccessoryPlugin {
             await com.setPartyOn(value as boolean);
             log(`SetPartyOn(${value as boolean})`);
             callback();
-          });
+          }).catch((err) => callback(err));
         },
       );
 
     this.informationService = new hap.Service.AccessoryInformation();
     this.informationService.setCharacteristic(hap.Characteristic.Manufacturer, 'Helios AG 2');
-    this.informationService.getCharacteristic(hap.Characteristic.Model).onGet(
-      async () => {
-        log('Calling getModel().');
-        return this.heliosKwl.run(async (com) => {
-          const model = await com.getModel();
-          log(`Return getModel() => ${model}`);
-          return model;
-        });
-      },
-    );
-
+    this.informationService.getCharacteristic(hap.Characteristic.Model)
+      .on(
+        CharacteristicEventTypes.GET,
+        async (callback: CharacteristicGetCallback) => {
+          log('Calling getModel().');
+          await this.heliosKwl.run(async (com) => {
+            const model = await com.getModel();
+            log(`Return getModel() => ${model}`);
+            callback(undefined, model);
+          }).catch((err) => callback(err));
+        },
+      );
+    setInterval(() => this.periodicFetch(), 1000 * 5);
     log.info('Switch finished initializing!');
+  }
+
+  private isFetching = false;
+
+  private async periodicFetch() {
+    try {
+      // prevent callback overflow
+      if (this.isFetching) return;
+      this.isFetching = true;
+      this.log.debug('Fetching updates');
+      await this.heliosKwl.run(async (com) => {
+        const isOn = await com.getPartyOn();
+        this.log.info(`getPartyOn() => ${isOn}`);
+        this.switchService
+          .getCharacteristic(hap.Characteristic.On)
+          .updateValue(isOn);
+      });
+    } catch (error) {
+      this.log.error(`Fetching error: ${error}`);
+    } finally {
+      this.isFetching = false;
+    }
   }
 
   /*
