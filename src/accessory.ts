@@ -31,6 +31,12 @@ class HeliosKWLAccessory implements AccessoryPlugin {
 
   private readonly name: string;
 
+  private firmware?: string;
+
+  private model?:string;
+
+  private serial?: string;
+
   private lastFanOnValue = true;
 
   private isFetching = false;
@@ -92,7 +98,12 @@ class HeliosKWLAccessory implements AccessoryPlugin {
   private async handleSerialNumberGet() {
     this.log.info('Triggered GET SerialNumber');
     return this.heliosKwl
-      .run(async (com) => com.getSerial())
+      .run(async (com) => {
+        if (!this.serial) {
+          this.serial = await com.getSerial();
+        }
+        return this.serial;
+      })
       .catch((err) => {
         this.log.error(err);
         return '';
@@ -102,7 +113,12 @@ class HeliosKWLAccessory implements AccessoryPlugin {
   private async handleModelGet() {
     this.log.info('Triggered GET Model');
     return this.heliosKwl
-      .run(async (com) => com.getModel())
+      .run(async (com) => {
+        if (!this.model) {
+          this.model = await com.getModel();
+        }
+        return this.model;
+      })
       .catch((err) => {
         this.log.error(err);
         return '';
@@ -136,7 +152,12 @@ class HeliosKWLAccessory implements AccessoryPlugin {
   private async handleFirmwareRevisionGet() {
     this.log.info('Triggered GET FirmwareRevision');
     return this.heliosKwl
-      .run(async (com) => com.getFirmwareRevision())
+      .run(async (com) => {
+        if (!this.firmware) {
+          this.firmware = await com.getFirmwareRevision();
+        }
+        return this.firmware;
+      })
       .catch((err) => {
         this.log.error(err);
         return '';
