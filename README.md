@@ -6,7 +6,7 @@ The plugin provides the following services:
 
 - **Party Modus Switch**: A switch synchronized to the 'Party Mode' of the ventilation system
 - **Silent Modus Switch**: A switch synchronized to the 'Silent Mode' of the ventilation system
-- **Fan**: Signalizes the fan speed. For security reason the fan can't be turned off.
+- **Fan**: Signalizes the fan speed. For safety reason the fan can't be turned off.
 
 ## Remarks
 
