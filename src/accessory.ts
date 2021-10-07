@@ -26,16 +26,17 @@ interface HeliosKWLConfig extends AccessoryConfig{
  * "hap-nodejs" module).
  */
 let hap: HAP;
+const unknown = 'unknown';
 class HeliosKWLAccessory implements AccessoryPlugin {
   private readonly log: Logging;
 
   private readonly name: string;
 
-  private firmware?: string;
+  private firmware = unknown;
 
-  private model?:string;
+  private model = unknown;
 
-  private serial?: string;
+  private serial = unknown;
 
   private lastFanOnValue = true;
 
@@ -86,8 +87,8 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     this.informationService.getCharacteristic(hap.Characteristic.Identify)
       .onSet(this.handleIdentifySet.bind(this));
 
-    setInterval(() => this.getInformation(), 1000 * 27);
-    setTimeout(() => setInterval(() => this.periodicFetch(), 1000 * 7), 1000 * 3);
+    setTimeout(() => setInterval(() => this.getInformation(), 1000 * 27), 1000 * 3);
+    setTimeout(() => setInterval(() => this.periodicFetch(), 1000 * 7), 1000 * 5);
 
     log.info('Switch finished initializing!');
   }
@@ -96,14 +97,16 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     this.log.error(`Triggered SET Identify: ${value}`);
   }
 
-  private async handleSerialNumberGet() {
-    this.log.info('Triggered GET SerialNumber');
-    return this.serial ?? '';
+  private handleSerialNumberGet() {
+    return this.serial;
   }
 
-  private async handleModelGet() {
-    this.log.info('Triggered GET Model');
-    return this.model ?? '';
+  private handleFirmwareRevisionGet() {
+    return this.firmware;
+  }
+
+  private handleModelGet() {
+    return this.model;
   }
 
   private async handlePartySet(isParty : any) {
@@ -130,17 +133,24 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     return true;
   }
 
-  private async handleFirmwareRevisionGet() {
-    this.log.info('Triggered GET FirmwareRevision');
-    return this.firmware ?? '';
-  }
-
   private async getInformation() {
-    return this.heliosKwl.run(async (com) => {
-      this.firmware = await com.getFirmwareRevision();
-      this.model = await com.getModel();
-      this.serial = await com.getSerial();
+    await this.heliosKwl.run(async (com) => {
+      this.firmware = await com.getFirmwareRevision() ?? unknown;
+      this.model = await com.getModel() ?? unknown;
+      this.serial = await com.getSerial() ?? unknown;
     });
+
+    this.informationService
+      .getCharacteristic(hap.Characteristic.FirmwareRevision)
+      .updateValue(this.firmware);
+
+    this.informationService
+      .getCharacteristic(hap.Characteristic.Model)
+      .updateValue(this.model);
+
+    this.informationService
+      .getCharacteristic(hap.Characteristic.SerialNumber)
+      .updateValue(this.serial);
   }
 
   private async periodicFetch() {

@@ -1,8 +1,12 @@
 # Changelog
 
+## [0.1.3] - 2021-10-07
+
+- bugfix
+
 ## [0.1.2] - 2021-10-07
 
-- Added caching of infor values
+- Added caching of info values
 
 ## [0.1.1] - 2021-10-04
 
