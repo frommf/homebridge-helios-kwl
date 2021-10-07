@@ -31,6 +31,12 @@ class HeliosKWLAccessory implements AccessoryPlugin {
 
   private readonly name: string;
 
+  private firmware?: string;
+
+  private model?:string;
+
+  private serial?: string;
+
   private lastFanOnValue = true;
 
   private isFetching = false;
@@ -80,6 +86,7 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     this.informationService.getCharacteristic(hap.Characteristic.Identify)
       .onSet(this.handleIdentifySet.bind(this));
 
+    setInterval(() => this.getInformation(), 1000 * 27);
     setTimeout(() => setInterval(() => this.periodicFetch(), 1000 * 7), 1000 * 3);
 
     log.info('Switch finished initializing!');
@@ -91,22 +98,12 @@ class HeliosKWLAccessory implements AccessoryPlugin {
 
   private async handleSerialNumberGet() {
     this.log.info('Triggered GET SerialNumber');
-    return this.heliosKwl
-      .run(async (com) => com.getSerial())
-      .catch((err) => {
-        this.log.error(err);
-        return '';
-      });
+    return this.serial ?? '';
   }
 
   private async handleModelGet() {
     this.log.info('Triggered GET Model');
-    return this.heliosKwl
-      .run(async (com) => com.getModel())
-      .catch((err) => {
-        this.log.error(err);
-        return '';
-      });
+    return this.model ?? '';
   }
 
   private async handlePartySet(isParty : any) {
@@ -135,12 +132,15 @@ class HeliosKWLAccessory implements AccessoryPlugin {
 
   private async handleFirmwareRevisionGet() {
     this.log.info('Triggered GET FirmwareRevision');
-    return this.heliosKwl
-      .run(async (com) => com.getFirmwareRevision())
-      .catch((err) => {
-        this.log.error(err);
-        return '';
-      });
+    return this.firmware ?? '';
+  }
+
+  private async getInformation() {
+    return this.heliosKwl.run(async (com) => {
+      this.firmware = await com.getFirmwareRevision();
+      this.model = await com.getModel();
+      this.serial = await com.getSerial();
+    });
   }
 
   private async periodicFetch() {
