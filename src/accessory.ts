@@ -93,19 +93,19 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     log.info('Switch finished initializing!');
   }
 
-  handleIdentifySet(value: any) {
+  private async handleIdentifySet(value: any) {
     this.log.error(`Triggered SET Identify: ${value}`);
   }
 
-  private handleSerialNumberGet() {
+  private async handleSerialNumberGet() {
     return this.serial;
   }
 
-  private handleFirmwareRevisionGet() {
+  private async handleFirmwareRevisionGet() {
     return this.firmware;
   }
 
-  private handleModelGet() {
+  private async handleModelGet() {
     return this.model;
   }
 
@@ -123,8 +123,9 @@ class HeliosKWLAccessory implements AccessoryPlugin {
       .catch((err) => this.log.error(err));
   }
 
-  private handleFanSet(isOn : any) {
-    this.log.info('Triggered SET fan ignored');
+  // eslint-disable-next-line no-unused-vars
+  private async handleFanSet(isOn : any) {
+    this.log.info('Ignored SET fan');
     setTimeout(() => {
       this.fan
         .getCharacteristic(hap.Characteristic.On)
@@ -134,11 +135,13 @@ class HeliosKWLAccessory implements AccessoryPlugin {
   }
 
   private async getInformation() {
-    await this.heliosKwl.run(async (com) => {
-      this.firmware = await com.getFirmwareRevision() ?? unknown;
-      this.model = await com.getModel() ?? unknown;
-      this.serial = await com.getSerial() ?? unknown;
-    });
+    await this.heliosKwl
+      .run(async (com) => {
+        this.firmware = await com.getFirmwareRevision() ?? unknown;
+        this.model = await com.getModel() ?? unknown;
+        this.serial = await com.getSerial() ?? unknown;
+      })
+      .catch((err) => this.log.error(`Error getting infos: ${err}`));
 
     this.informationService
       .getCharacteristic(hap.Characteristic.FirmwareRevision)
