@@ -163,6 +163,7 @@ class HeliosKWLAccessory implements AccessoryPlugin {
       this.isFetching = true;
       this.log.debug('Fetching updates');
       await this.heliosKwl.run(async (com) => {
+        this.log.debug('Connected to KWL');
         const isPartyOn = await com.getPartyOn();
         this.partySwitch
           .getCharacteristic(hap.Characteristic.On)
