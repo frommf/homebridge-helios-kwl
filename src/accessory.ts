@@ -87,8 +87,8 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     this.informationService.getCharacteristic(hap.Characteristic.Identify)
       .onSet(this.handleIdentifySet.bind(this));
 
-    setTimeout(() => setInterval(() => this.getInformation(), 1000 * 27), 1000 * 3);
-    setTimeout(() => setInterval(() => this.periodicFetch(), 1000 * 7), 1000 * 5);
+    setTimeout(() => setInterval(() => this.getInformation(), 1000 * 60), 1000 * 1);
+    setTimeout(() => setInterval(() => this.periodicFetch(), 1000 * 10), 1000 * 8);
 
     log.info('Switch finished initializing!');
   }
