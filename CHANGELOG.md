@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.4] - unreleased
+
+- fixed error handling
+
 ## [0.1.3] - 2021-10-07
 
 - bugfix

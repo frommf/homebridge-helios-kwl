@@ -131,7 +131,6 @@ class HeliosKWLAccessory implements AccessoryPlugin {
         .getCharacteristic(hap.Characteristic.On)
         .updateValue(this.lastFanOnValue);
     }, 500);
-    return true;
   }
 
   private async getInformation() {
@@ -180,7 +179,7 @@ class HeliosKWLAccessory implements AccessoryPlugin {
           .updateValue(fanPercentage);
 
         const fanStage = await com.getFanStage();
-        this.lastFanOnValue = fanStage !== 0;
+        this.lastFanOnValue = !isSilentOn && fanStage > 0;
         this.fan
           .getCharacteristic(hap.Characteristic.On)
           .updateValue(this.lastFanOnValue);
