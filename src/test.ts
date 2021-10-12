@@ -1,19 +1,14 @@
+import { stringify } from 'querystring';
 import HeliosKWL from './heliosKWL';
 
 (async () => {
-  const helios = new HeliosKWL('helios.fritz.box', 502, console.log);
-
-  async function test() {
-    // eslint-disable-next-line no-await-in-loop
+  try {
+    const helios = new HeliosKWL('helios.fritz.box', 502, console.log);
     await helios.run(async (com) => {
       const percent = await com.getVentilationPercent();
       console.log({ percent });
     });
+  } catch (error) {
+    console.log(`ERROR:${error}`);
   }
-
-  const ps: Promise<void>[] = [];
-  for (let i = 0; i < 25; i++) {
-    ps.push(test());
-  }
-  await Promise.all(ps);
 })();

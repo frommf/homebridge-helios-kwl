@@ -29,17 +29,15 @@ export default class HeliosModbus {
     this.socket = new Socket();
     this.socket.setTimeout(socketTimeout);
     this.socket.on('timeout', () => {
-      this.log('socket timeout');
       this.socket.emit('error', new Error('Timeout'));
     });
     this.socket.on('error', (err) => {
-      this.log(err.message);
-      this.close();
+      this.log(`Socket error: ${err.message}`);
     });
     this.client = new ModbusTCPClient(this.socket, this.modbusUnitId, 5000);
   }
 
-  async open(): Promise<void> {
+  open(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const rejectListener = (err: Error) => {
         this.log('Connection error.');
@@ -55,12 +53,20 @@ export default class HeliosModbus {
     });
   }
 
-  close() {
-    if (this.isConnected) {
-      this.isConnected = false;
-      this.socket.destroy();
-      this.log('Disconnected.');
-    }
+  close() : Promise<void> {
+    return new Promise((resolve) => {
+      if (this.isConnected) {
+        this.isConnected = false;
+        const doneListener = (hadError : boolean) => {
+          this.log(`Disconnected ${hadError ? 'with error' : 'without error'}`);
+          resolve();
+        };
+        this.socket.once('close', doneListener);
+        this.socket.destroy();
+      } else {
+        resolve();
+      }
+    });
   }
 
   private static check(variable: string, modbuslen:number, value: string) {
@@ -72,7 +78,7 @@ export default class HeliosModbus {
     }
   }
 
-  async set(variable: string, modbuslen: number, value: string) : Promise<void> {
+  set(variable: string, modbuslen: number, value: string) : Promise<void> {
     HeliosModbus.check(variable, modbuslen, value);
     return new Promise<void>((resolve, reject) => {
       if (!this.isConnected) throw new Error('Not connected.');
@@ -83,7 +89,8 @@ export default class HeliosModbus {
         .then((resp) => {
           this.log(`Written: ${JSON.stringify(resp?.request?.body?.values ?? {})}`);
           resolve();
-        }, (error) => {
+        })
+        .catch((error) => {
           reject(new Error(
             `Modbus write error on '${variable}' with value ${value}: ${error}`,
           ));
@@ -91,7 +98,7 @@ export default class HeliosModbus {
     });
   }
 
-  async get(variable: string, modbuslen: number): Promise<string> {
+  get(variable: string, modbuslen: number): Promise<string> {
     HeliosModbus.check(variable, modbuslen, '');
     return new Promise((resolve, reject) => {
       this.log(`Get helios var ${variable} with len ${modbuslen}`);
@@ -117,7 +124,13 @@ export default class HeliosModbus {
                   ),
                 );
               }
+            })
+            .catch((error) => {
+              reject(new Error(`Unable to read register for ${variable}: ${error}`));
             });
+        })
+        .catch((error) => {
+          reject(new Error(`Unable to write register for ${variable}: ${error}`));
         });
     });
   }
