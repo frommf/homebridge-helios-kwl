@@ -27,6 +27,27 @@ interface HeliosKWLConfig extends AccessoryConfig{
  */
 let hap: HAP;
 const unknown = 'unknown';
+const LEVELS: { [key: number]: [number, number] } = {
+    0: [0, 0],
+    1: [1, 33],
+    2: [34, 66],
+    3: [67, 99],
+    4: [100, 100],
+};
+
+function toPercent(level: number): number {
+    const [min, max] = LEVELS[level];
+    return Math.floor((min + max) / 2);
+}
+
+function fromPercent(percent: number): number {
+    for (const [level, [min, max]] of Object.entries(LEVELS)) {
+        if (percent >= min && percent <= max) {
+            return Number(level);
+        }
+    }
+    return -1; // Return -1 if percent is not within any level range
+}
 class HeliosKWLAccessory implements AccessoryPlugin {
   private readonly log: Logging;
 
@@ -41,6 +62,8 @@ class HeliosKWLAccessory implements AccessoryPlugin {
   private lastFanOnValue = true;
 
   private isFetching = false;
+
+  private fanStage = 2;
 
   private readonly partySwitch: Service;
 
@@ -67,6 +90,9 @@ class HeliosKWLAccessory implements AccessoryPlugin {
     this.fan = new hap.Service.Fan(`${this.name} - Fan`, 'fan speed');
     this.fan.getCharacteristic(hap.Characteristic.On)
       .onSet(this.handleFanSet.bind(this));
+    this.fan.getCharacteristic(hap.Characteristic.RotationSpeed)
+      .onGet(this.handleFanGetSpeed.bind(this))
+      .onSet(this.handleFanSetSpeed.bind(this));
 
     this.silentSwitch = new hap.Service.Switch(`${this.name} - Silent Mode`, 'silent mode');
     this.silentSwitch.getCharacteristic(hap.Characteristic.On)
@@ -125,12 +151,35 @@ class HeliosKWLAccessory implements AccessoryPlugin {
 
   // eslint-disable-next-line no-unused-vars
   private async handleFanSet(isOn : any) {
-    this.log.info('Ignored SET fan');
-    setTimeout(() => {
-      this.fan
-        .getCharacteristic(hap.Characteristic.On)
-        .updateValue(this.lastFanOnValue);
-    }, 500);
+    this.log.info(`Triggered SET fan: ${isOn}`);
+    var value = 0;
+    if (isOn) {
+      value = 50;
+    }
+    this.fanStage = fromPercent(value);
+    this.log.info(`Setting fan stage: ${this.fanStage}`);
+    return this.heliosKwl
+        .run(async (com) => com.setFanStage(this.fanStage))
+        .catch((err) => this.log.error(err));
+  }
+
+  private async handleFanGetSpeed() {
+    this.log.info(`Triggered GET fan speed`);
+
+    await this.heliosKwl.run(async (com) => {
+        this.fanStage = await com.getFanStage();
+    });
+    this.log.info(`Got fan stage ${this.fanStage}`);
+    return toPercent(this.fanStage);
+  }
+
+  private async handleFanSetSpeed(speed : any) {
+    this.log.info(`Triggered SET fan speed: ${speed}`);
+    this.fanStage = fromPercent(speed);
+    this.log.info(`Setting fan stage: ${this.fanStage}`);
+    return this.heliosKwl
+        .run(async (com) => com.setFanStage(this.fanStage))
+        .catch((err) => this.log.error(err));
   }
 
   private async getInformation() {
@@ -173,16 +222,14 @@ class HeliosKWLAccessory implements AccessoryPlugin {
           .getCharacteristic(hap.Characteristic.On)
           .updateValue(isSilentOn);
 
-        const fanPercentage = await com.getVentilationPercent();
-        this.fan
-          .getCharacteristic(hap.Characteristic.RotationSpeed)
-          .updateValue(fanPercentage);
-
-        const fanStage = await com.getFanStage();
-        this.lastFanOnValue = !isSilentOn && fanStage > 0;
+        this.fanStage = await com.getFanStage();
+        this.lastFanOnValue = !isSilentOn && this.fanStage > 0;
         this.fan
           .getCharacteristic(hap.Characteristic.On)
           .updateValue(this.lastFanOnValue);
+        this.fan
+          .getCharacteristic(hap.Characteristic.RotationSpeed)
+          .updateValue(toPercent(this.fanStage));
       });
     } catch (error) {
       this.log.error(`Error fetching values: ${error}`);

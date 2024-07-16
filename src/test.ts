@@ -3,9 +3,12 @@ import HeliosKWL from './heliosKWL';
 
 (async () => {
   try {
-    const helios = new HeliosKWL('helios.fritz.box', 502, console.log);
+    const helios = new HeliosKWL('10.0.1.64', 502, console.log);
     await helios.run(async (com) => {
-      const value = await com.getFanStage();
+      var value = await com.getFanStage();
+      console.log({ value });
+      await com.setFanStage(4);
+      value = await com.getFanStage();
       console.log({ value });
     });
   } catch (error) {

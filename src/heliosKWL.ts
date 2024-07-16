@@ -34,6 +34,11 @@ class Commands {
     return Number(stage);
   }
 
+  async setFanStage(stage : any) : Promise<void> {
+    const numberValue = Number(stage).toString();
+    await this.bus.set('v00102', 5, numberValue);
+  }
+
   async getFirmwareRevision() : Promise<string> {
     return this.bus.get('v01101', 7);
   }
